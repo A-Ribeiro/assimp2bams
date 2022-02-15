@@ -5,9 +5,9 @@ but may have eternal life.
   \
 John 3:16
 
-## font2bitmap
+## assimp2bams
 
-Application to read FreeType2 font types and encode to basof2 file format.
+Application to read any 3D Model (From Assimp) and convert it to bams format.
 
 ## Related Links
 
@@ -22,6 +22,8 @@ https://github.com/A-Ribeiro/aRibeiroWrappers
 https://github.com/A-Ribeiro/aRibeiroTests
 
 ## Tools
+
+https://github.com/A-Ribeiro/assimp2bams
 
 https://github.com/A-Ribeiro/font2bitmap
 
