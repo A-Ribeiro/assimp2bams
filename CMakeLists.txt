@@ -13,8 +13,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 
 ENABLE_LANGUAGE(CXX)
-#assimp uses c++11 in their source
-set (CMAKE_CXX_STANDARD 11)
+# assimp uses c++11 in their source
+# set (CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -43,6 +43,9 @@ add_executable(${PROJECT_NAME}
     ${HEADERS}
     ${SRC}
 )
+
+# assimp uses c++11, so the child projects needs to use it too
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
 
 # set the target's folder (for IDEs that support it, e.g. Visual Studio)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "TOOLS")
