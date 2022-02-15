@@ -20,6 +20,9 @@ if(LIB_ASSIMP STREQUAL TryFindPackageFirst)
 
     if (assimp_INCLUDE_DIRS AND assimp_LIBRARIES)
 	  set(assimp_FOUND TRUE)
+    else()
+        unset(assimp_INCLUDE_DIRS CACHE)
+        unset(assimp_LIBRARIES CACHE)
 	endif()
 
     if (assimp_FOUND)
@@ -40,7 +43,22 @@ if(LIB_ASSIMP STREQUAL FromSource)
     # tool_include_lib(freetype)
     # include_directories("${ARIBEIRO_GEN_INCLUDE_DIR}/freetype/" PARENT_SCOPE)
 
-    message(FATAL_ERROR "Compiling from Source not implemented")
+
+    tool_download_git_package("https://github.com/assimp/assimp.git" assimp)
+
+
+    OPTION ( ASSIMP_BUILD_TESTS "If the test suite for Assimp is built in addition to the library." OFF)
+    OPTION( ASSIMP_BUILD_ASSIMP_TOOLS "If the supplementary tools for Assimp are built in addition to the library." OFF )
+    OPTION( ASSIMP_INSTALL "Disable this if you want to use assimp as a submodule." OFF)
+
+    tool_include_lib(assimp)
+
+    include_directories("${ARIBEIRO_LIBS_DIR}/${LIBNAME}/include/" PARENT_SCOPE)
+
+    # set the target's folder (for IDEs that support it, e.g. Visual Studio)
+    set_target_properties(assimp PROPERTIES FOLDER "LIBS/assimp")
+
+    #message(FATAL_ERROR "Compiling from Source not implemented")
 
 elseif(LIB_ASSIMP STREQUAL UsingFindPackage)
 
