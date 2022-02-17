@@ -16,7 +16,7 @@ The parameters to the command line tool:
 * __-a:__ Export only animations
 * __-gs:__ Export geometry and scene
 
-If you don't pass any parameter to the tool, it will export all geometry information (animations, geomtry and scene).
+If you don't pass any parameter to the tool, it will export all geometry information (animations, geometry and scene).
 
 Example:
 
