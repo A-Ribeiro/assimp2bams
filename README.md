@@ -5,9 +5,33 @@ but may have eternal life.
   \
 John 3:16
 
-## assimp2bams
+## Geometry tool: assimp2bams
 
-Application to read any 3D Model (From Assimp) and convert it to bams format.
+The command line tool __assimp2bams__ generates the format (Binary Asilva Mesh Scene).
+
+The input is any Assimp supported 3D model format with or without animations (.obj, .blend, .fbx, .gltf, etc...).
+
+The parameters to the command line tool:
+
+* __-a:__ Export only animations
+* __-gs:__ Export geometry and scene
+
+If you don't pass any parameter to the tool, it will export all geometry information (animations, geomtry and scene).
+
+Example:
+
+```bash
+# Generates a BAMS model file with the animations, 
+# geometry and scene called full_export.bams
+assimp2bams full_export.fbx
+
+# Generates a BAMS model file with the geometry 
+# and scene called geo_scene.bams
+assimp2bams -gs geo_scene.fbx
+
+# Generates a BAMS model file with only the animations
+assimp2bams -a anim_only.fbx
+```
 
 ## Related Links
 
