@@ -22,14 +22,15 @@ Example:
 
 ```bash
 # Generates a BAMS model file with the animations, 
-# geometry and scene called full_export.bams
+# geometry and scene at full_export.bams
 assimp2bams full_export.fbx
 
 # Generates a BAMS model file with the geometry 
-# and scene called geo_scene.bams
+# and scene at geo_scene.bams
 assimp2bams -gs geo_scene.fbx
 
-# Generates a BAMS model file with only the animations
+# Generates a BAMS model file with 
+# only the animations at anim_only.bams
 assimp2bams -a anim_only.fbx
 ```
 
