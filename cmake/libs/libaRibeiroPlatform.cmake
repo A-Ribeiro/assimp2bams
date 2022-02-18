@@ -44,8 +44,7 @@ if (LIB_ARIBEIROPLATFORM STREQUAL FromGit)
 
 elseif (LIB_ARIBEIROPLATFORM STREQUAL UsingFindPackage)
 
-    tool_is_lib(aRibeiroPlatform aRibeiroPlatform_registered)
-    if (NOT ${aRibeiroPlatform_registered})
+    if (NOT TARGET aRibeiroPlatform)
 
         if(OS_TARGET STREQUAL linux)
             set(ADD_LIBS pthread rt)
@@ -54,12 +53,11 @@ elseif (LIB_ARIBEIROPLATFORM STREQUAL UsingFindPackage)
         find_package(aRibeiroPlatform REQUIRED QUIET)
         add_library(aRibeiroPlatform OBJECT ${ARIBEIROPLATFORM_LIBRARIES})
         target_link_libraries(aRibeiroPlatform ${ARIBEIROPLATFORM_LIBRARIES} ${ADD_LIBS})
-        include_directories(${ARIBEIROPLATFORM_INCLUDE_DIR} PARENT_SCOPE)
+        include_directories(${ARIBEIROPLATFORM_INCLUDE_DIR})
 
         # set the target's folder (for IDEs that support it, e.g. Visual Studio)
         set_target_properties(aRibeiroPlatform PROPERTIES FOLDER "aRibeiro")
 
-        tool_register_lib(aRibeiroPlatform)
     endif()
 
 else()

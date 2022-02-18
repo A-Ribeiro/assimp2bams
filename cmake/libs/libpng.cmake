@@ -29,7 +29,7 @@ if(LIB_PNG STREQUAL FromSource)
     #unset(SKIP_INSTALL_ALL)
     #unset(PNG_STATIC)
 
-    include_directories("${ARIBEIRO_GEN_INCLUDE_DIR}/libpng/" PARENT_SCOPE)
+    include_directories("${ARIBEIRO_GEN_INCLUDE_DIR}/libpng/")
 
     add_library(libpng ALIAS png_static)
 
@@ -41,8 +41,8 @@ if(LIB_PNG STREQUAL FromSource)
 
 elseif(LIB_PNG STREQUAL UsingFindPackage)
 
-    tool_is_lib(libpng libpng_registered)
-    if (NOT ${libpng_registered})    
+    if (NOT TARGET libpng)
+
         find_package(PNG REQUIRED QUIET)
 
         #message("includeDIR: ${PNG_INCLUDE_DIR}")
@@ -50,11 +50,11 @@ elseif(LIB_PNG STREQUAL UsingFindPackage)
 
         add_library(libpng OBJECT ${PNG_LIBRARIES})
         target_link_libraries(libpng ${PNG_LIBRARIES})
-        include_directories(${PNG_INCLUDE_DIR} PARENT_SCOPE)
+        include_directories(${PNG_INCLUDE_DIR})
 
         # set the target's folder (for IDEs that support it, e.g. Visual Studio)
         set_target_properties(libpng PROPERTIES FOLDER "LIBS")
-        tool_register_lib(libpng)
+
     endif()
 
 else()

@@ -22,12 +22,11 @@ if(LIB_JPEG STREQUAL FromSource)
 
     tool_include_lib(libjpeg)
 
-    include_directories("${ARIBEIRO_GEN_INCLUDE_DIR}/libjpeg/" PARENT_SCOPE)
+    include_directories("${ARIBEIRO_GEN_INCLUDE_DIR}/libjpeg/")
 
 elseif(LIB_JPEG STREQUAL UsingFindPackage)
 
-    tool_is_lib(libjpeg libjpeg_registered)
-    if (NOT ${libjpeg_registered})
+    if (NOT TARGET libjpeg)
 
         find_package(JPEG REQUIRED QUIET)
 
@@ -36,12 +35,11 @@ elseif(LIB_JPEG STREQUAL UsingFindPackage)
 
         add_library(libjpeg OBJECT ${JPEG_LIBRARIES})
         target_link_libraries(libjpeg ${JPEG_LIBRARIES})
-        include_directories(${JPEG_INCLUDE_DIR} PARENT_SCOPE)
+        include_directories(${JPEG_INCLUDE_DIR})
 
         # set the target's folder (for IDEs that support it, e.g. Visual Studio)
         set_target_properties(libjpeg PROPERTIES FOLDER "LIBS")
 
-        tool_register_lib(zlib)
     endif()
 
 else()

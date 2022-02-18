@@ -142,6 +142,13 @@ macro(copy_file_after_build PROJECT_NAME)
                 COMMAND ${CMAKE_COMMAND} -E copy
                         ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
                         $<TARGET_FILE_DIR:${PROJECT_NAME}>/${FILENAME_WITHOUT_PATH} )
+        elseif(EXISTS "${FILENAME}")
+			get_filename_component(FILENAME_WITHOUT_PATH "${FILENAME}" NAME)
+            add_custom_command(
+                TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy
+                        ${FILENAME}
+                        $<TARGET_FILE_DIR:${PROJECT_NAME}>/${FILENAME_WITHOUT_PATH} )
         else()
             message(FATAL_ERROR "File Does Not Exists: ${FILENAME}")
         endif()
@@ -225,23 +232,23 @@ macro(tool_download_lib_package REPOSITORY_URL LIBNAME)
 endmacro()
 
 
-set( lib_list "" CACHE INTERNAL "lib_lists")
-mark_as_internal(lib_list)
+# set( lib_list "" CACHE INTERNAL "lib_lists")
+# mark_as_internal(lib_list)
 
-macro(tool_is_lib LIBNAME result)
-    if ("${LIBNAME}" IN_LIST lib_list)
-        set(${result} ON)
-    else()
-        set(${result} OFF)
-    endif()
-endmacro()
+# macro(tool_is_lib LIBNAME result)
+#     if ("${LIBNAME}" IN_LIST lib_list)
+#         set(${result} ON)
+#     else()
+#         set(${result} OFF)
+#     endif()
+# endmacro()
 
-macro(tool_register_lib LIBNAME)
-    if (NOT "${LIBNAME}" IN_LIST lib_list)    
-        list(APPEND lib_list ${LIBNAME})
-        set( lib_list ${lib_list} CACHE INTERNAL "lib_lists" FORCE)
-    endif()
-endmacro()
+# macro(tool_register_lib LIBNAME)
+#     if (NOT "${LIBNAME}" IN_LIST lib_list)    
+#         list(APPEND lib_list ${LIBNAME})
+#         set( lib_list ${lib_list} CACHE INTERNAL "lib_lists" FORCE)
+#     endif()
+# endmacro()
 
 macro(tool_include_lib)
     #add_subdirectory("${ARIBEIRO_LIBS_DIR}/${LIBNAME}" "${CMAKE_BINARY_DIR}/bin/${LIBNAME}")
@@ -252,10 +259,11 @@ macro(tool_include_lib)
 
     if (  ${ARGC} EQUAL 1 )
         set(LIBNAME ${ARGV0})
-        if (NOT "${LIBNAME}" IN_LIST lib_list)
+        if (NOT TARGET ${LIBNAME})
+        # if (NOT "${LIBNAME}" IN_LIST lib_list)
             
-            list(APPEND lib_list ${LIBNAME})
-            set( lib_list ${lib_list} CACHE INTERNAL "lib_lists" FORCE)
+        #     list(APPEND lib_list ${LIBNAME})
+        #     set( lib_list ${lib_list} CACHE INTERNAL "lib_lists" FORCE)
 
             #message("Add new Lib: ${lib_list}")
             #message("Normal")
@@ -265,10 +273,11 @@ macro(tool_include_lib)
     elseif (  ${ARGC} EQUAL 2 )
         set(_PATH ${ARGV0})
         set(LIBNAME ${ARGV1})
-        if (NOT "${LIBNAME}" IN_LIST lib_list)
+        if (NOT TARGET ${LIBNAME})
+        # if (NOT "${LIBNAME}" IN_LIST lib_list)
             
-            list(APPEND lib_list ${LIBNAME})
-            set( lib_list ${lib_list} CACHE INTERNAL "lib_lists" FORCE)
+        #     list(APPEND lib_list ${LIBNAME})
+        #     set( lib_list ${lib_list} CACHE INTERNAL "lib_lists" FORCE)
 
             #message("Add new Lib: ${lib_list}")
             #message("Path")
@@ -301,4 +310,16 @@ macro(tool_download_git_package REPOSITORY_URL LIBNAME)
         message(STATUS "[${LIBNAME}] done")
 
     endif()
+endmacro()
+
+
+macro(tool_remove_compile_options)
+    get_directory_property(compile_opts COMPILE_OPTIONS)
+
+    foreach(entry IN ITEMS ${ARGN})
+        list(REMOVE_ITEM compile_opts ${entry})
+    endforeach()
+
+    #set_property(DIRECTORY ${CMAKE_CURRENT_SRC_DIR} APPEND PROPERTY COMPILE_OPTIONS ${compile_opts})
+    set_property(DIRECTORY ${CMAKE_CURRENT_SRC_DIR} PROPERTY COMPILE_OPTIONS ${compile_opts})
 endmacro()

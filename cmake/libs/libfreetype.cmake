@@ -22,22 +22,21 @@ if(LIB_FREETYPE STREQUAL FromSource)
 
     tool_include_lib(freetype)
 
-    include_directories("${ARIBEIRO_GEN_INCLUDE_DIR}/freetype/" PARENT_SCOPE)
+    include_directories("${ARIBEIRO_GEN_INCLUDE_DIR}/freetype/")
 
 elseif(LIB_FREETYPE STREQUAL UsingFindPackage)
 
-    tool_is_lib(freetype freetype_registered)
-    if (NOT ${freetype_registered})
+    if (NOT TARGET freetype)
+
         find_package(Freetype REQUIRED QUIET)
 
         add_library(freetype OBJECT ${FREETYPE_LIBRARIES})
         target_link_libraries(freetype ${FREETYPE_LIBRARIES})
-        include_directories(${FREETYPE_INCLUDE_DIRS} PARENT_SCOPE)
+        include_directories(${FREETYPE_INCLUDE_DIRS})
 
         # set the target's folder (for IDEs that support it, e.g. Visual Studio)
         set_target_properties(freetype PROPERTIES FOLDER "LIBS")
 
-        tool_register_lib(freetype)
     endif()
 
 else()
