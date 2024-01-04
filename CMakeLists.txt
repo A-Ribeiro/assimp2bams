@@ -13,23 +13,24 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 
 ENABLE_LANGUAGE(CXX)
-# assimp uses c++11 in their source
-# set (CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# avoid base libs overwrite
-option(ARIBEIRO_SKIP_INSTALL_CORE ON)
-option(ARIBEIRO_SKIP_INSTALL_PLATFORM ON)
-option(ARIBEIRO_SKIP_INSTALL_DATA ON)
+# reset global variables
+unset (CMAKE_MODULE_PATH CACHE)
+unset (CMAKE_PREFIX_PATH CACHE)
 
-include(cmake/include.cmake)
-include(cmake/libs/libaRibeiroCore.cmake)
-include(cmake/libs/libaRibeiroPlatform.cmake)
-include(cmake/libs/libaRibeiroData.cmake)
-include(cmake/libs/libassimp.cmake)
+add_compile_options(-fPIC)
+
+add_subdirectory(libs/InteractiveToolkit "${CMAKE_BINARY_DIR}/lib/InteractiveToolkit")
+add_subdirectory(libs/InteractiveToolkit-Extension "${CMAKE_BINARY_DIR}/lib/InteractiveToolkit-Extension")
+
+# show info about the lib parameters
+find_package(InteractiveToolkit REQUIRED)
+
+include(libs/InteractiveToolkit-Extension/cmake/libassimp.cmake)
 
 FILE( GLOB HEADERS src/*.h )
 FILE( GLOB SRC src/*.cpp )
@@ -45,15 +46,22 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
 # set the target's folder (for IDEs that support it, e.g. Visual Studio)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "TOOLS")
 
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+    ${assimp_INCLUDE_DIRS}
+)
+
 # Linking libraries
 target_link_libraries( 
     ${PROJECT_NAME}
+    PUBLIC
+    InteractiveToolkit-Extension
     assimp
-    aRibeiroCore aRibeiroPlatform aRibeiroData
 )
 
 if(WIN32)
-    copy_file_after_build(
+    tool_copy_file_after_build(
         ${PROJECT_NAME} 
         resources/assimp2bams-no-animations.bat
         resources/assimp2bams-only-animations.bat

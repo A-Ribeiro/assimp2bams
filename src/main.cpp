@@ -1,6 +1,5 @@
-#include <aRibeiroData/aRibeiroData.h>
-#include <aRibeiroPlatform/aRibeiroPlatform.h>
-#include <aRibeiroCore/aRibeiroCore.h>
+#include <InteractiveToolkit/InteractiveToolkit.h>
+#include <InteractiveToolkit-Extension/InteractiveToolkit-Extension.h>
 
 #include "AssimpExporter.h"
 
@@ -17,7 +16,7 @@ void printUsage() {
 }
 
 int main(int argc, char* argv[]){
-    aRibeiro::PlatformPath::setWorkingPath(aRibeiro::PlatformPath::getExecutablePath(argv[0]));
+    ITKCommon::Path::setWorkingPath(ITKCommon::Path::getExecutablePath(argv[0]));
     printf("assimp2bams - http://alessandroribeiro.thegeneralsolution.com/ - \"make things easy\"\n");
 
 #if DEBUG == 0
@@ -54,14 +53,14 @@ int main(int argc, char* argv[]){
 #endif
 
     std::string folder, filename, filename_wo_ext, fileext;
-    PlatformPath::splitPathString(filepath, &folder, &filename, &filename_wo_ext, &fileext);
+    ITKCommon::Path::splitPathString(filepath, &folder, &filename, &filename_wo_ext, &fileext);
 
     fprintf(stdout, "Folder: %s\n", folder.c_str());
     fprintf(stdout, "Filename: %s\n", filename.c_str());
     fprintf(stdout, "Filename W/O ext: %s\n", filename_wo_ext.c_str());
 
-    std::string inputFile = (folder + PlatformPath::SEPARATOR + filename);
-    std::string outputFile = (folder + PlatformPath::SEPARATOR + filename_wo_ext + std::string(".bams"));
+    std::string inputFile = (folder + ITKCommon::Path::SEPARATOR + filename);
+    std::string outputFile = (folder + ITKCommon::Path::SEPARATOR + filename_wo_ext + std::string(".bams"));
 
     ModelContainer *container = ImportFromAssimp(inputFile.c_str());
 

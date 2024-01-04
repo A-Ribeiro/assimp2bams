@@ -1,11 +1,7 @@
+#pragma once
 
-#ifndef ASSIMP_EXPORTER_H
-#define ASSIMP_EXPORTER_H
-
-#include <aRibeiroData/aRibeiroData.h>
-#include <aRibeiroCore/aRibeiroCore.h>
-using namespace aRibeiro;
-using namespace model;
+#include <InteractiveToolkit/InteractiveToolkit.h>
+#include <InteractiveToolkit-Extension/InteractiveToolkit-Extension.h>
 
 /*
 void splitString(std::string input, std::string *outFolder, std::string *outFilename, std::string *outFileWOExt, std::string *outFileExt) {
@@ -67,7 +63,7 @@ bool starts_with(std::string const & value, std::string const & starting)
 #include <assimp/postprocess.h> // Post processing flags
 
 unsigned int floatToColor(float c) {
-    c = clamp(c, 0.0f, 1.0f);
+    c = MathCore::OP<float>::clamp(c, 0.0f, 1.0f);
     
     unsigned int result = (unsigned int) ( c * 255.0f + 0.5f );
     if (result > 255)
@@ -850,9 +846,3 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
     
     return result;
 }
-
-
-
-
-
-#endif
