@@ -22,8 +22,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 unset (CMAKE_MODULE_PATH CACHE)
 unset (CMAKE_PREFIX_PATH CACHE)
 
-add_compile_options(-fPIC)
-
 add_subdirectory(libs/InteractiveToolkit "${CMAKE_BINARY_DIR}/lib/InteractiveToolkit")
 add_subdirectory(libs/InteractiveToolkit-Extension "${CMAKE_BINARY_DIR}/lib/InteractiveToolkit-Extension")
 

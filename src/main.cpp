@@ -59,10 +59,10 @@ int main(int argc, char* argv[]){
     fprintf(stdout, "Filename: %s\n", filename.c_str());
     fprintf(stdout, "Filename W/O ext: %s\n", filename_wo_ext.c_str());
 
-    std::string inputFile = (folder + ITKCommon::Path::SEPARATOR + filename);
-    std::string outputFile = (folder + ITKCommon::Path::SEPARATOR + filename_wo_ext + std::string(".bams"));
+    std::string inputFile = (folder + ITKCommon::PATH_SEPARATOR + filename);
+    std::string outputFile = (folder + ITKCommon::PATH_SEPARATOR + filename_wo_ext + std::string(".bams"));
 
-    ModelContainer *container = ImportFromAssimp(inputFile.c_str());
+    ITKExtension::Model::ModelContainer *container = ImportFromAssimp(inputFile.c_str());
 
 
     if (!export_anim)
