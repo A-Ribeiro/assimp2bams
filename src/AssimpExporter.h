@@ -1,59 +1,12 @@
+#pragma once
 
-#ifndef ASSIMP_EXPORTER_H
-#define ASSIMP_EXPORTER_H
-
-#include <aRibeiroData/aRibeiroData.h>
-#include <aRibeiroCore/aRibeiroCore.h>
-using namespace aRibeiro;
-using namespace model;
-
-/*
-void splitString(std::string input, std::string *outFolder, std::string *outFilename, std::string *outFileWOExt, std::string *outFileExt) {
-    //
-    // normalize path separator
-    //
-    std::replace(input.begin(), input.end(), '\\', PlatformPath::SEPARATOR[0]);
-    std::replace(input.begin(), input.end(), '/', PlatformPath::SEPARATOR[0]);
-    
-    
-    std::string folder, filename, filename_wo_ext, ext;
-    size_t path_directory_index = input.find_last_of(PlatformPath::SEPARATOR[0]);
-    if (path_directory_index == -1) {
-        folder = ".";
-        filename = input;
-    }
-    else {
-        folder = input.substr(0, path_directory_index);
-        filename = input.substr(path_directory_index + 1, input.size() - 1 - path_directory_index);
-    }
-    
-    
-    path_directory_index = filename.find_last_of('.');
-    if (path_directory_index == -1) {
-        filename_wo_ext = filename;
-        ext = "";
-    }
-    else {
-        filename_wo_ext = filename.substr(0, path_directory_index);
-        ext = filename.substr(path_directory_index + 1, filename.size() - 1 - path_directory_index);
-    }
-    
-    
-    
-    *outFolder = folder;
-    *outFilename = filename;
-    *outFileWOExt = filename_wo_ext;
-    *outFileExt = ext;
-    
-}
-*/
+#include <InteractiveToolkit/InteractiveToolkit.h>
+#include <InteractiveToolkit-Extension/InteractiveToolkit-Extension.h>
 
 bool starts_with(std::string const & value, std::string const & starting)
 {
     return (value.rfind(starting, 0) == 0);
 }
-
-
 
 // MacOS fix importing
 #ifdef __APPLE__
@@ -67,7 +20,7 @@ bool starts_with(std::string const & value, std::string const & starting)
 #include <assimp/postprocess.h> // Post processing flags
 
 unsigned int floatToColor(float c) {
-    c = clamp(c, 0.0f, 1.0f);
+    c = MathCore::OP<float>::clamp(c, 0.0f, 1.0f);
     
     unsigned int result = (unsigned int) ( c * 255.0f + 0.5f );
     if (result > 255)
@@ -80,38 +33,56 @@ unsigned int floatToColor(float c) {
 
 
 //aiTextureType_DIFFUSE
-void processTextureType(Material &material, aiMaterial *aimaterial,  aiTextureType textureType, TextureType ourTextureType) {
+void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aimaterial,  aiTextureType textureType, ITKExtension::Model::TextureType ourTextureType) {
     
     for (int j = 0; j < aimaterial->GetTextureCount(textureType); j++) {
         aiString path;
         aiTextureMapping mapping = aiTextureMapping_UV;
         unsigned int uvIndex;
         float blend;
-        aiTextureOp texOP = (aiTextureOp)TextureOp_Default;
+        aiTextureOp texOP = (aiTextureOp)aiTextureOp_Multiply;//TextureOp_Default;
         aiTextureMapMode mapMode = aiTextureMapMode_Wrap;
         
         fprintf(stdout, "         tex(%i) => \n", j);
         if (aimaterial->GetTexture(textureType, j, &path, &mapping, &uvIndex, &blend, &texOP, &mapMode) == aiReturn_SUCCESS) {
             std::string folder,filename, file_wo_ext, ext;
-            PlatformPath::splitPathString(path.data, &folder, &filename, &file_wo_ext, &ext);
+            ITKCommon::Path::splitPathString(path.data, &folder, &filename, &file_wo_ext, &ext);
+
+            ITKExtension::Model::TextureOp mTexOP = ITKExtension::Model::TextureOp_Default;
+            switch(texOP){
+                case aiTextureOp_Multiply:mTexOP = ITKExtension::Model::TextureOp_Multiply;break;
+                case aiTextureOp_Add:mTexOP = ITKExtension::Model::TextureOp_Add;break;
+                case aiTextureOp_Subtract:mTexOP = ITKExtension::Model::TextureOp_Subtract;break;
+                case aiTextureOp_Divide:mTexOP = ITKExtension::Model::TextureOp_Divide;break;
+                case aiTextureOp_SmoothAdd:mTexOP = ITKExtension::Model::TextureOp_SmoothAdd;break;
+                case aiTextureOp_SignedAdd:mTexOP = ITKExtension::Model::TextureOp_SignedAdd;break;
+            }
+
+            ITKExtension::Model::TextureMapMode mMapMode = ITKExtension::Model::TextureMapMode_Wrap;
+            switch(mapMode){
+                case aiTextureMapMode_Wrap:mMapMode = ITKExtension::Model::TextureMapMode_Wrap;break;
+                case aiTextureMapMode_Clamp:mMapMode = ITKExtension::Model::TextureMapMode_Clamp;break;
+                case aiTextureMapMode_Decal:mMapMode = ITKExtension::Model::TextureMapMode_Decal;break;
+                case aiTextureMapMode_Mirror:mMapMode = ITKExtension::Model::TextureMapMode_Mirror;break;
+            }
             
             if ( mapping == aiTextureMapping_UV ) {
                 
                 
                 fprintf(stdout, "                    file: %s\n", file_wo_ext.c_str());
                 fprintf(stdout, "                    ext: %s\n", ext.c_str());
-                fprintf(stdout, "                    type: %s\n", TextureTypeToStr(ourTextureType) );
-                fprintf(stdout, "                    op: %s\n", TextureOpToStr((TextureOp)texOP) );
-                fprintf(stdout, "                    mapMode: %s\n", TextureMapModeToStr((TextureMapMode)mapMode) );
+                fprintf(stdout, "                    type: %s\n", ITKExtension::Model::TextureTypeToStr(ourTextureType) );
+                fprintf(stdout, "                    op: %s\n", ITKExtension::Model::TextureOpToStr(mTexOP) );
+                fprintf(stdout, "                    mapMode: %s\n", ITKExtension::Model::TextureMapModeToStr(mMapMode) );
                 fprintf(stdout, "                    uvIndex: %i\n", uvIndex);
                 
-                Texture texture;
+                ITKExtension::Model::Texture texture;
                 texture.filename = file_wo_ext;
                 texture.fileext = ext;
                 texture.type = ourTextureType;//TextureType_DIFFUSE;
-                texture.op = (TextureOp)texOP;
+                texture.op = mTexOP;
                 texture.uvIndex = uvIndex;
-                texture.mapMode = (TextureMapMode)mapMode;
+                texture.mapMode = mMapMode;
                 
                 material.textures.push_back(texture);
             } else {
@@ -126,11 +97,12 @@ void processTextureType(Material &material, aiMaterial *aimaterial,  aiTextureTy
     
 }
 
-void recursiveInsertNodes(ModelContainer *result, aiNode * ainode, std::string output, int parentIndex, bool leftHanded) {
-    Node node;
+void recursiveInsertNodes(ITKExtension::Model::ModelContainer *result, aiNode * ainode, std::string output, int parentIndex, bool leftHanded) {
+    
+    ITKExtension::Model::Node node;
     
     node.name = ainode->mName.data;
-    node.transform = transpose( mat4(
+    node.transform = MathCore::OP<MathCore::mat4f>::transpose( MathCore::mat4f(
   ainode->mTransformation.a1, ainode->mTransformation.b1, ainode->mTransformation.c1, ainode->mTransformation.d1,
   ainode->mTransformation.a2, ainode->mTransformation.b2, ainode->mTransformation.c2, ainode->mTransformation.d2,
   ainode->mTransformation.a3, ainode->mTransformation.b3, ainode->mTransformation.c3, ainode->mTransformation.d3,
@@ -139,37 +111,26 @@ void recursiveInsertNodes(ModelContainer *result, aiNode * ainode, std::string o
     
     //fix transform
     {
-        mat4 m = node.transform;
-        
+        MathCore::mat4f m = node.transform;
         //vec3 translatevec =toVec3(m * vec4(0,0,0,1)) * vec3(1,1,-1);
-        vec3 translatevec =toVec3(m * vec4(0,0,0,1));
+        MathCore::vec3f translatevec = MathCore::CVT<MathCore::vec4f>::toVec3( m * MathCore::vec4f(0,0,0,1) );
+        MathCore::vec3f scalevec = MathCore::vec3f( MathCore::OP<MathCore::vec4f>::length(m[0]),
+                                                    MathCore::OP<MathCore::vec4f>::length(m[1]),
+                                                    MathCore::OP<MathCore::vec4f>::length(m[2]) );
         
-        vec3 scalevec = aRibeiro::vec3(aRibeiro::length(m[0]),
-                                       aRibeiro::length(m[1]),
-                                       aRibeiro::length(m[2]));
+        m = MathCore::OP<MathCore::mat4f>::extractRotation(m);
+        m[0] = MathCore::OP<MathCore::vec4f>::normalize(m[0]);
+        m[1] = MathCore::OP<MathCore::vec4f>::normalize(m[1]);
+        m[2] = MathCore::OP<MathCore::vec4f>::normalize(m[2]);
         
-        /*
-        printf("%s scalevec %f, %f, %f\n",
-               output.c_str(),
-               scalevec.x,
-               scalevec.y,
-               scalevec.z);*/
-        
-        m = extractRotation(m);
-        m[0] = normalize(m[0]);
-        m[1] = normalize(m[1]);
-        m[2] = normalize(m[2]);
-        
-        quat rotationquat = extractQuat( m );// * aRibeiro::quatFromEuler(0, 0, DEG2RAD(180.0));
-        
-        if (parentIndex == -1){
-            rotationquat = aRibeiro::quatFromEuler(0, DEG2RAD(180.0f), 0) * rotationquat;
-        }
-        
-        node.transform = translate(translatevec) * toMat4(rotationquat) * scale(scalevec);
-        
+        MathCore::quatf rotationquat = MathCore::GEN<MathCore::quatf>::fromMat4( m );// * aRibeiro::quatFromEuler(0, 0, DEG2RAD(180.0));
+        if (parentIndex == -1)
+            rotationquat = MathCore::GEN<MathCore::quatf>::fromEuler(0, MathCore::OP<float>::deg_2_rad(180.0f), 0) * rotationquat;
+        node.transform = 
+            MathCore::GEN<MathCore::mat4f>::translateHomogeneous(translatevec) * 
+            MathCore::GEN<MathCore::mat4f>::fromQuat(rotationquat) * 
+            MathCore::GEN<MathCore::mat4f>::scaleHomogeneous(scalevec);
     }
-    
     
     for (int i = 0; i < ainode->mNumMeshes; i++) {
         node.geometries.push_back(ainode->mMeshes[i]);
@@ -195,19 +156,20 @@ void recursiveInsertNodes(ModelContainer *result, aiNode * ainode, std::string o
     
     
     {
-        vec3 LocalPosition = toVec3(node.transform * aRibeiro::vec4(0,0,0,1));
+        MathCore::vec3f LocalPosition = MathCore::CVT<MathCore::vec4f>::toVec3(node.transform * MathCore::vec4f(0,0,0,1));
+        MathCore::vec3f LocalScale = MathCore::vec3f(
+            MathCore::OP<MathCore::vec4f>::length(node.transform[0]),
+            MathCore::OP<MathCore::vec4f>::length(node.transform[1]),
+            MathCore::OP<MathCore::vec4f>::length(node.transform[2])
+        );
         
-        vec3 LocalScale = aRibeiro::vec3(aRibeiro::length(node.transform[0]),
-                                            aRibeiro::length(node.transform[1]),
-                                            aRibeiro::length(node.transform[2]));
+        MathCore::mat4f m = MathCore::OP<MathCore::mat4f>::extractRotation(node.transform);
         
-        mat4 m = aRibeiro::extractRotation(node.transform);
+        m[0] = MathCore::OP<MathCore::vec4f>::normalize(m[0]);
+        m[1] = MathCore::OP<MathCore::vec4f>::normalize(m[1]);
+        m[2] = MathCore::OP<MathCore::vec4f>::normalize(m[2]);
         
-        m[0] = aRibeiro::normalize(m[0]);
-        m[1] = aRibeiro::normalize(m[1]);
-        m[2] = aRibeiro::normalize(m[2]);
-        
-        quat LocalRotation = aRibeiro::extractQuat( m );
+        MathCore::quatf LocalRotation = MathCore::GEN<MathCore::quatf>::fromMat4( m );
         
         printf("%s LocalPosition %f, %f, %f\n",
                output.c_str(),
@@ -236,7 +198,7 @@ void recursiveInsertNodes(ModelContainer *result, aiNode * ainode, std::string o
 }
 
 
-ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
+ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
     const aiScene* scene;
     aiPropertyStore *store = aiCreatePropertyStore();
     
@@ -245,7 +207,8 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
     
     //aiSetImportPropertyInteger(store, AI_CONFIG_PP_SLM_VERTEX_LIMIT, AI_SLM_DEFAULT_MAX_VERTICES);
 
-    aiSetImportPropertyInteger(store, AI_CONFIG_PP_SLM_VERTEX_LIMIT, 65536);
+    //aiSetImportPropertyInteger(store, AI_CONFIG_PP_SLM_VERTEX_LIMIT, 65536);
+    aiSetImportPropertyInteger(store, AI_CONFIG_PP_SLM_VERTEX_LIMIT, AI_MAX_VERTICES);
     //aiSetImportPropertyInteger(store, AI_SLM_DEFAULT_MAX_VERTICES, AI_SLM_DEFAULT_MAX_TRIANGLES);
     
     //assimp unit is cm... convert it to meters
@@ -269,13 +232,13 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         exit(-1);
     }
     
-    ModelContainer *result = new ModelContainer();
+    ITKExtension::Model::ModelContainer *result = new ITKExtension::Model::ModelContainer();
     //
     // MESH EXPORTING
     //
     for (int i = 0; i < scene->mNumMeshes; i++) {
         fprintf(stdout, "[Mesh] %i / %i\n", i + 1, scene->mNumMeshes);
-        Geometry geometry;
+        ITKExtension::Model::Geometry geometry;
         //geometry.format = 0;
         
         aiMesh* mesh = scene->mMeshes[i];
@@ -313,7 +276,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         
         if (mesh->HasPositions()) {
             fprintf(stdout, "         + positions (%i)\n", mesh->mNumVertices);
-            geometry.format = geometry.format | model::CONTAINS_POS;
+            geometry.format = geometry.format | ITKExtension::Model::CONTAINS_POS;
         }
         else
         {
@@ -323,25 +286,25 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         
         if (mesh->HasNormals()) {
             fprintf(stdout, "         + normals\n");
-            geometry.format = geometry.format | model::CONTAINS_NORMAL;
+            geometry.format = geometry.format | ITKExtension::Model::CONTAINS_NORMAL;
         }
         if (mesh->HasTangentsAndBitangents()) {
             fprintf(stdout, "         + tangents (binormals need to be derivated)\n");
             //fprintf(stdout, "         + binormals\n");
-            geometry.format = geometry.format | model::CONTAINS_TANGENT;// | VertexFormat::CONTAINS_BINORMAL;
+            geometry.format = geometry.format | ITKExtension::Model::CONTAINS_TANGENT;// | VertexFormat::CONTAINS_BINORMAL;
         }
         
         for (int i = 0; i < 8; i++) {
             if (mesh->HasTextureCoords(i)) {
                 fprintf(stdout, "         + uv %i\n", i);
-                geometry.format = geometry.format | (model::CONTAINS_UV0 << i);
+                geometry.format = geometry.format | (ITKExtension::Model::CONTAINS_UV0 << i);
             }
         }
         
         for (int i = 0; i < 8; i++) {
             if (mesh->HasVertexColors(i)) {
                 fprintf(stdout, "         + vertex color %i\n", i);
-                geometry.format = geometry.format | (model::CONTAINS_COLOR0 << i);
+                geometry.format = geometry.format | (ITKExtension::Model::CONTAINS_COLOR0 << i);
             }
         }
         
@@ -350,19 +313,19 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         //
         geometry.vertexCount = mesh->mNumVertices;
         for (int i = 0; i < mesh->mNumVertices; i++) {
-            geometry.pos.push_back( vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z) );
+            geometry.pos.push_back( MathCore::vec3f(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z) );
             if (mesh->HasNormals())
-                geometry.normals.push_back( vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z) );
+                geometry.normals.push_back( MathCore::vec3f(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z) );
             if (mesh->HasTangentsAndBitangents()) {
-                geometry.tangent.push_back(vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z));
+                geometry.tangent.push_back( MathCore::vec3f(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z));
                 //geometry.binormal.push_back(vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z));
             }
             for (int j = 0; j < 8; j++) {
                 if (mesh->HasTextureCoords(j))
-                    geometry.uv[j].push_back(vec3(mesh->mTextureCoords[j][i].x, mesh->mTextureCoords[j][i].y, mesh->mTextureCoords[j][i].z));
+                    geometry.uv[j].push_back(MathCore::vec3f(mesh->mTextureCoords[j][i].x, mesh->mTextureCoords[j][i].y, mesh->mTextureCoords[j][i].z));
                 if (mesh->HasVertexColors(j))
                     geometry.color[j].push_back(
-                                                vec4(mesh->mColors[j][i].r,
+                                                MathCore::vec4f(mesh->mColors[j][i].r,
                                                      mesh->mColors[j][i].g,
                                                      mesh->mColors[j][i].b,
                                                      mesh->mColors[j][i].a)
@@ -387,7 +350,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
                     exit(-1);
                 }
                 for (int i = 0; i < face.mNumIndices; i++) {
-                    ARIBEIRO_ABORT(face.mIndices[i] >= 65536, "Max index value error (%u).\n", face.mIndices[i]);
+                    //ARIBEIRO_ABORT(face.mIndices[i] >= 65536, "Max index value error (%u).\n", face.mIndices[i]);
                     geometry.indice.push_back(face.mIndices[i]);
                 }
             }
@@ -402,7 +365,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
             for (int i = 0; i < mesh->mNumBones; i++) {
                 aiBone *aibone = mesh->mBones[i];
                 
-                Bone bone;
+                ITKExtension::Model::Bone bone;
                 bone.name = aibone->mName.data;
 
                 /*
@@ -417,7 +380,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
                 {
                     mat4 m = bone.offset;
                     vec3 translatevec =toVec3(m * vec4(0,0,0,1));
-                    vec3 scalevec = aRibeiro::vec3(aRibeiro::length(m[0]),
+                    vec3 scalevec = MathCore::vec3f(aRibeiro::length(m[0]),
                                                 aRibeiro::length(m[1]),
                                                 aRibeiro::length(m[2]));
                     m = extractRotation(m);
@@ -431,7 +394,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
 
 
                 for (int j = 0; j < aibone->mNumWeights; j++) {
-                    VertexWeight bw;
+                    ITKExtension::Model::VertexWeight bw;
                     bw.vertexID = aibone->mWeights[j].mVertexId;
                     bw.weight = aibone->mWeights[j].mWeight;
                     bone.weights.push_back(bw);
@@ -456,7 +419,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
     for (int i = 0; i < scene->mNumAnimations; i++) {
         fprintf(stdout, "[Animation] %i / %i\n", i + 1, scene->mNumAnimations);
         aiAnimation *aianimation = scene->mAnimations[i];
-        Animation animation;
+        ITKExtension::Model::Animation animation;
         
         animation.name = aianimation->mName.data;
         animation.durationTicks = (float)aianimation->mDuration;
@@ -476,17 +439,32 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         for(int j=0;j<aianimation->mNumChannels;j++) {
             aiNodeAnim *ainodeanim =aianimation->mChannels[j];
             
-            NodeAnimation na;
+            ITKExtension::Model::NodeAnimation na;
             na.nodeName = ainodeanim->mNodeName.data;
-            na.preState = (AnimBehaviour)ainodeanim->mPreState;
-            na.postState = (AnimBehaviour)ainodeanim->mPostState;
-            
+
+            na.preState = ITKExtension::Model::AnimBehaviour_DEFAULT;
+            na.postState = ITKExtension::Model::AnimBehaviour_DEFAULT;
+
+            switch(ainodeanim->mPreState){
+                case aiAnimBehaviour_DEFAULT: na.preState = ITKExtension::Model::AnimBehaviour_DEFAULT;break;
+                case aiAnimBehaviour_CONSTANT: na.preState = ITKExtension::Model::AnimBehaviour_CONSTANT;break;
+                case aiAnimBehaviour_LINEAR: na.preState = ITKExtension::Model::AnimBehaviour_LINEAR;break;
+                case aiAnimBehaviour_REPEAT: na.preState = ITKExtension::Model::AnimBehaviour_REPEAT;break;
+            }
+
+            switch(ainodeanim->mPostState){
+                case aiAnimBehaviour_DEFAULT: na.postState = ITKExtension::Model::AnimBehaviour_DEFAULT;break;
+                case aiAnimBehaviour_CONSTANT: na.postState = ITKExtension::Model::AnimBehaviour_CONSTANT;break;
+                case aiAnimBehaviour_LINEAR: na.postState = ITKExtension::Model::AnimBehaviour_LINEAR;break;
+                case aiAnimBehaviour_REPEAT: na.postState = ITKExtension::Model::AnimBehaviour_REPEAT;break;
+            }
+
             for(int k =0; k< ainodeanim->mNumPositionKeys; k++){
                 aiVectorKey aivectorkey = ainodeanim->mPositionKeys[k];
                 
-                Vec3Key vec3key;
+                ITKExtension::Model::Vec3Key vec3key;
                 vec3key.time = (float)aivectorkey.mTime;
-                vec3key.value = vec3(aivectorkey.mValue.x,aivectorkey.mValue.y,aivectorkey.mValue.z);
+                vec3key.value = MathCore::vec3f(aivectorkey.mValue.x,aivectorkey.mValue.y,aivectorkey.mValue.z);
                 
                 na.positionKeys.push_back(vec3key);
             }
@@ -494,9 +472,9 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
             for(int k =0; k< ainodeanim->mNumScalingKeys; k++){
                 aiVectorKey aivectorkey = ainodeanim->mScalingKeys[k];
                 
-                Vec3Key vec3key;
+                ITKExtension::Model::Vec3Key vec3key;
                 vec3key.time = (float)aivectorkey.mTime;
-                vec3key.value = vec3(aivectorkey.mValue.x,aivectorkey.mValue.y,aivectorkey.mValue.z);
+                vec3key.value = MathCore::vec3f(aivectorkey.mValue.x,aivectorkey.mValue.y,aivectorkey.mValue.z);
                 
                 na.scalingKeys.push_back(vec3key);
             }
@@ -505,9 +483,9 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
             for(int k =0; k< ainodeanim->mNumRotationKeys; k++){
                 aiQuatKey aiquatkey = ainodeanim->mRotationKeys[k];
                 
-                QuatKey quatkey;
+                ITKExtension::Model::QuatKey quatkey;
                 quatkey.time = (float)aiquatkey.mTime;
-                quatkey.value = quat(aiquatkey.mValue.x,
+                quatkey.value = MathCore::quatf(aiquatkey.mValue.x,
                                      aiquatkey.mValue.y,
                                      aiquatkey.mValue.z,
                                      aiquatkey.mValue.w);
@@ -541,14 +519,14 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         
         aiCamera *aicamera = scene->mCameras[i];
         
-        Camera camera;
+        ITKExtension::Model::Camera camera;
         
         camera.name = aicamera->mName.data;
         fprintf(stderr, "         name: %s\n", aicamera->mName.data);
         
-        camera.pos = vec3( aicamera->mPosition.x, aicamera->mPosition.y, aicamera->mPosition.z );
-        camera.up = vec3( aicamera->mUp.x, aicamera->mUp.y, aicamera->mUp.z );
-        camera.forward = vec3( aicamera->mLookAt.x, aicamera->mLookAt.y, aicamera->mLookAt.z );
+        camera.pos = MathCore::vec3f( aicamera->mPosition.x, aicamera->mPosition.y, aicamera->mPosition.z );
+        camera.up = MathCore::vec3f( aicamera->mUp.x, aicamera->mUp.y, aicamera->mUp.z );
+        camera.forward = MathCore::vec3f( aicamera->mLookAt.x, aicamera->mLookAt.y, aicamera->mLookAt.z );
         
         camera.horizontalFOVrad = aicamera->mHorizontalFOV;
         camera.nearPlane = aicamera->mClipPlaneNear;
@@ -567,8 +545,8 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         fprintf(stderr, "         nearPlane: %f\n", camera.nearPlane);
         fprintf(stderr, "         farPlane: %f\n", camera.farPlane);
         fprintf(stderr, "         aspect: %f\n", camera.aspect);
-        fprintf(stderr, "         horizontalFOV: %f\n", RAD2DEG(camera.horizontalFOVrad));
-        fprintf(stderr, "         verticalFOV: %f\n", RAD2DEG(camera.verticalFOVrad));
+        fprintf(stderr, "         horizontalFOV: %f\n", MathCore::OP<float>::rad_2_deg(camera.horizontalFOVrad));
+        fprintf(stderr, "         verticalFOV: %f\n", MathCore::OP<float>::rad_2_deg(camera.verticalFOVrad));
         
         
         result->cameras.push_back(camera);
@@ -584,13 +562,21 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         
         aiLight *ailight = scene->mLights[i];
         
-        Light light;
+        ITKExtension::Model::Light light;
         
         light.name = ailight->mName.data;
         
         fprintf(stdout, "        name => %s\n", ailight->mName.data);
         
-        light.type = (LightType)ailight->mType;
+        light.type = ITKExtension::Model::LightType_NONE;
+        switch(ailight->mType) {
+            case aiLightSource_UNDEFINED:light.type = ITKExtension::Model::LightType_NONE;break;
+            case aiLightSource_DIRECTIONAL:light.type = ITKExtension::Model::LightType_DIRECTIONAL;break;
+            case aiLightSource_POINT:light.type = ITKExtension::Model::LightType_POINT;break;
+            case aiLightSource_SPOT:light.type = ITKExtension::Model::LightType_SPOT;break;
+            case aiLightSource_AMBIENT:light.type = ITKExtension::Model::LightType_AMBIENT;break;
+            case aiLightSource_AREA:light.type = ITKExtension::Model::LightType_AREA;break;
+        }
         
         //common attrs
         light.attenuationConstant = ailight->mAttenuationConstant;
@@ -601,37 +587,37 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         fprintf(stdout, "        attenuationLinear => %f\n", light.attenuationLinear);
         fprintf(stdout, "        attenuationQuadratic => %f\n", light.attenuationQuadratic);
         
-        light.colorDiffuse = vec3( ailight->mColorDiffuse.r, ailight->mColorDiffuse.g, ailight->mColorDiffuse.b );
-        light.colorSpecular = vec3( ailight->mColorSpecular.r, ailight->mColorSpecular.g, ailight->mColorSpecular.b );
-        light.colorAmbient = vec3( ailight->mColorAmbient.r, ailight->mColorAmbient.g, ailight->mColorAmbient.b );
+        light.colorDiffuse = MathCore::vec3f( ailight->mColorDiffuse.r, ailight->mColorDiffuse.g, ailight->mColorDiffuse.b );
+        light.colorSpecular = MathCore::vec3f( ailight->mColorSpecular.r, ailight->mColorSpecular.g, ailight->mColorSpecular.b );
+        light.colorAmbient = MathCore::vec3f( ailight->mColorAmbient.r, ailight->mColorAmbient.g, ailight->mColorAmbient.b );
         
         fprintf(stdout, "        colorDiffuse => vec3( %f, %f, %f )\n", light.colorDiffuse.r, light.colorDiffuse.g, light.colorDiffuse.b);
         fprintf(stdout, "        colorSpecular => vec3( %f, %f, %f )\n", light.colorSpecular.r, light.colorSpecular.g, light.colorSpecular.b);
         fprintf(stdout, "        colorAmbient => vec3( %f, %f, %f )\n", light.colorAmbient.r, light.colorAmbient.g, light.colorAmbient.b);
         
-        fprintf(stdout, "        type => %s\n", LightTypeToStr(light.type) );
+        fprintf(stdout, "        type => %s\n", ITKExtension::Model::LightTypeToStr(light.type) );
         
         switch(light.type) {
-            case LightType_NONE:
+            case ITKExtension::Model::LightType_NONE:
                 break;
-            case LightType_DIRECTIONAL:
-                light.directional.direction = vec3( ailight->mDirection.x, ailight->mDirection.y, ailight->mDirection.z );
-                light.directional.up = vec3( ailight->mUp.x, ailight->mUp.y, ailight->mUp.z );
+            case ITKExtension::Model::LightType_DIRECTIONAL:
+                light.directional.direction = MathCore::vec3f( ailight->mDirection.x, ailight->mDirection.y, ailight->mDirection.z );
+                light.directional.up = MathCore::vec3f( ailight->mUp.x, ailight->mUp.y, ailight->mUp.z );
                 
                 fprintf(stdout, "        direction => vec3( %f, %f, %f )\n", light.directional.direction.x, light.directional.direction.y, light.directional.direction.z);
                 fprintf(stdout, "        up => vec3( %f, %f, %f )\n", light.directional.up.x, light.directional.up.y, light.directional.up.z);
                 
                 break;
-            case LightType_POINT:
-                light.point.position = vec3( ailight->mPosition.x, ailight->mPosition.y, ailight->mPosition.z );
+            case ITKExtension::Model::LightType_POINT:
+                light.point.position = MathCore::vec3f( ailight->mPosition.x, ailight->mPosition.y, ailight->mPosition.z );
                 
                 fprintf(stdout, "        position => vec3( %f, %f, %f )\n", light.point.position.x, light.point.position.y, light.point.position.z);
                 
                 break;
-            case LightType_SPOT:
-                light.spot.position = vec3( ailight->mPosition.x, ailight->mPosition.y, ailight->mPosition.z );
-                light.spot.direction = vec3( ailight->mDirection.x, ailight->mDirection.y, ailight->mDirection.z );
-                light.spot.up = vec3( ailight->mUp.x, ailight->mUp.y, ailight->mUp.z );
+            case ITKExtension::Model::LightType_SPOT:
+                light.spot.position = MathCore::vec3f( ailight->mPosition.x, ailight->mPosition.y, ailight->mPosition.z );
+                light.spot.direction = MathCore::vec3f( ailight->mDirection.x, ailight->mDirection.y, ailight->mDirection.z );
+                light.spot.up = MathCore::vec3f( ailight->mUp.x, ailight->mUp.y, ailight->mUp.z );
                 light.spot.angleInnerCone = ailight->mAngleInnerCone;
                 light.spot.angleOuterCone = ailight->mAngleOuterCone;
                 
@@ -642,21 +628,21 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
                 fprintf(stdout, "        angleOuterCone => %f\n", light.spot.angleOuterCone);
                 
                 break;
-            case LightType_AMBIENT:
-                light.ambient.position = vec3( ailight->mPosition.x, ailight->mPosition.y, ailight->mPosition.z );
-                light.ambient.direction = vec3( ailight->mDirection.x, ailight->mDirection.y, ailight->mDirection.z );
-                light.ambient.up = vec3( ailight->mUp.x, ailight->mUp.y, ailight->mUp.z );
+            case ITKExtension::Model::LightType_AMBIENT:
+                light.ambient.position = MathCore::vec3f( ailight->mPosition.x, ailight->mPosition.y, ailight->mPosition.z );
+                light.ambient.direction = MathCore::vec3f( ailight->mDirection.x, ailight->mDirection.y, ailight->mDirection.z );
+                light.ambient.up = MathCore::vec3f( ailight->mUp.x, ailight->mUp.y, ailight->mUp.z );
                 
                 fprintf(stdout, "        position => vec3( %f, %f, %f )\n", light.ambient.position.x, light.ambient.position.y, light.ambient.position.z);
                 fprintf(stdout, "        direction => vec3( %f, %f, %f )\n", light.ambient.direction.x, light.ambient.direction.y, light.ambient.direction.z);
                 fprintf(stdout, "        position => vec3( %f, %f, %f )\n", light.ambient.up.x, light.ambient.up.y, light.ambient.up.z);
                 
                 break;
-            case LightType_AREA:
-                light.area.position = vec3( ailight->mPosition.x, ailight->mPosition.y, ailight->mPosition.z );
-                light.area.direction = vec3( ailight->mDirection.x, ailight->mDirection.y, ailight->mDirection.z );
-                light.area.up = vec3( ailight->mUp.x, ailight->mUp.y, ailight->mUp.z );
-                light.area.size = vec2( ailight->mSize.x, ailight->mSize.y );
+            case ITKExtension::Model::LightType_AREA:
+                light.area.position = MathCore::vec3f( ailight->mPosition.x, ailight->mPosition.y, ailight->mPosition.z );
+                light.area.direction = MathCore::vec3f( ailight->mDirection.x, ailight->mDirection.y, ailight->mDirection.z );
+                light.area.up = MathCore::vec3f( ailight->mUp.x, ailight->mUp.y, ailight->mUp.z );
+                light.area.size = MathCore::vec2f( ailight->mSize.x, ailight->mSize.y );
                 
                 fprintf(stdout, "        position => vec3( %f, %f, %f )\n", light.area.position.x, light.area.position.y, light.area.position.z);
                 fprintf(stdout, "        direction => vec3( %f, %f, %f )\n", light.area.direction.x, light.area.direction.y, light.area.direction.z);
@@ -686,7 +672,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
         fprintf(stdout, "[Material] %i / %i\n", i + 1, scene->mNumMaterials);
         aiMaterial* aimaterial = scene->mMaterials[i];
         
-        Material material;
+        ITKExtension::Model::Material material;
         
         for (int j = 0; j < aimaterial->mNumProperties; j++) {
             aiMaterialProperty *materialProperty = aimaterial->mProperties[j];
@@ -736,7 +722,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
                             material.floatValue[materialProperty->mKey.data] = v;
                     }
                     else if (iMax == 2) {
-                        vec2 v(floats[0], floats[1]);
+                        MathCore::vec2f v(floats[0], floats[1]);
                         fprintf(stdout, "         %s => vec2 (%f, %f)\n", materialProperty->mKey.data, v.x, v.y);
                         if (starts_with(materialProperty->mKey.data, "$mat.")) {
                             fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$mat.")]);
@@ -746,7 +732,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
                             material.vec2Value[materialProperty->mKey.data] = v;
                     }
                     else if (iMax == 3) {
-                        vec3 v(floats[0], floats[1], floats[2]);
+                        MathCore::vec3f v(floats[0], floats[1], floats[2]);
                         fprintf(stdout, "         %s => vec3 (%f, %f, %f)\n", materialProperty->mKey.data, v.x, v.y, v.z);
                         if (starts_with(materialProperty->mKey.data, "$mat.")) {
                             fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$mat.")]);
@@ -756,7 +742,7 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
                             material.vec3Value[materialProperty->mKey.data] = v;
                     }
                     else if (iMax == 4) {
-                        vec4 v(floats[0], floats[1], floats[2], floats[3]);
+                        MathCore::vec4f v(floats[0], floats[1], floats[2], floats[3]);
                         fprintf(stdout, "         %s => vec4 (%f, %f, %f, %f)\n", materialProperty->mKey.data, v.x, v.y, v.z, v.w);
                         if (starts_with(materialProperty->mKey.data, "$mat.")) {
                             fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$mat.")]);
@@ -821,18 +807,18 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
             }
         }
         
-        processTextureType( material, aimaterial, aiTextureType_DIFFUSE     , TextureType_DIFFUSE     );
-        processTextureType( material, aimaterial, aiTextureType_SPECULAR    , TextureType_SPECULAR    );
-        processTextureType( material, aimaterial, aiTextureType_AMBIENT     , TextureType_AMBIENT     );
-        processTextureType( material, aimaterial, aiTextureType_EMISSIVE    , TextureType_EMISSIVE    );
-        processTextureType( material, aimaterial, aiTextureType_HEIGHT      , TextureType_HEIGHT      );
-        processTextureType( material, aimaterial, aiTextureType_NORMALS     , TextureType_NORMALS     );
-        processTextureType( material, aimaterial, aiTextureType_SHININESS   , TextureType_SHININESS   );
-        processTextureType( material, aimaterial, aiTextureType_OPACITY     , TextureType_OPACITY     );
-        processTextureType( material, aimaterial, aiTextureType_DISPLACEMENT, TextureType_DISPLACEMENT);
-        processTextureType( material, aimaterial, aiTextureType_LIGHTMAP    , TextureType_LIGHTMAP    );
-        processTextureType( material, aimaterial, aiTextureType_REFLECTION  , TextureType_REFLECTION  );
-        processTextureType( material, aimaterial, aiTextureType_UNKNOWN     , TextureType_UNKNOWN     );
+        processTextureType( material, aimaterial, aiTextureType_DIFFUSE     , ITKExtension::Model::TextureType_DIFFUSE     );
+        processTextureType( material, aimaterial, aiTextureType_SPECULAR    , ITKExtension::Model::TextureType_SPECULAR    );
+        processTextureType( material, aimaterial, aiTextureType_AMBIENT     , ITKExtension::Model::TextureType_AMBIENT     );
+        processTextureType( material, aimaterial, aiTextureType_EMISSIVE    , ITKExtension::Model::TextureType_EMISSIVE    );
+        processTextureType( material, aimaterial, aiTextureType_HEIGHT      , ITKExtension::Model::TextureType_HEIGHT      );
+        processTextureType( material, aimaterial, aiTextureType_NORMALS     , ITKExtension::Model::TextureType_NORMALS     );
+        processTextureType( material, aimaterial, aiTextureType_SHININESS   , ITKExtension::Model::TextureType_SHININESS   );
+        processTextureType( material, aimaterial, aiTextureType_OPACITY     , ITKExtension::Model::TextureType_OPACITY     );
+        processTextureType( material, aimaterial, aiTextureType_DISPLACEMENT, ITKExtension::Model::TextureType_DISPLACEMENT);
+        processTextureType( material, aimaterial, aiTextureType_LIGHTMAP    , ITKExtension::Model::TextureType_LIGHTMAP    );
+        processTextureType( material, aimaterial, aiTextureType_REFLECTION  , ITKExtension::Model::TextureType_REFLECTION  );
+        processTextureType( material, aimaterial, aiTextureType_UNKNOWN     , ITKExtension::Model::TextureType_UNKNOWN     );
         
         result->materials.push_back(material);
     }
@@ -850,9 +836,3 @@ ModelContainer *ImportFromAssimp(const char* filename, bool leftHanded = true) {
     
     return result;
 }
-
-
-
-
-
-#endif
