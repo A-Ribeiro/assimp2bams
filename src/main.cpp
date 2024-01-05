@@ -4,7 +4,7 @@
 #include "AssimpExporter.h"
 
 #define DEBUG 0
-
+ 
 
 void printUsage() {
     fprintf(stdout,

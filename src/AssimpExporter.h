@@ -35,7 +35,7 @@ unsigned int floatToColor(float c) {
 //aiTextureType_DIFFUSE
 void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aimaterial,  aiTextureType textureType, ITKExtension::Model::TextureType ourTextureType) {
     
-    for (int j = 0; j < aimaterial->GetTextureCount(textureType); j++) {
+    for (uint32_t j = 0; j < aimaterial->GetTextureCount(textureType); j++) {
         aiString path;
         aiTextureMapping mapping = aiTextureMapping_UV;
         unsigned int uvIndex;
@@ -132,12 +132,12 @@ void recursiveInsertNodes(ITKExtension::Model::ModelContainer *result, aiNode * 
             MathCore::GEN<MathCore::mat4f>::scaleHomogeneous(scalevec);
     }
     
-    for (int i = 0; i < ainode->mNumMeshes; i++) {
+    for (uint32_t i = 0; i < ainode->mNumMeshes; i++) {
         node.geometries.push_back(ainode->mMeshes[i]);
     }
     
     result->nodes.push_back(node);
-    int nodeIndex = result->nodes.size() - 1;
+    int nodeIndex = (int)result->nodes.size() - 1;
     
     if (parentIndex != -1) {
         result->nodes[parentIndex].children.push_back(nodeIndex);
@@ -145,7 +145,7 @@ void recursiveInsertNodes(ITKExtension::Model::ModelContainer *result, aiNode * 
     
     if (ainode->mNumMeshes > 0) {
         fprintf(stdout, "%s+%s ( meshCount: %i ids: ", output.c_str(), ainode->mName.data, ainode->mNumMeshes);
-        for (int i = 0; i < ainode->mNumMeshes; i++) {
+        for (uint32_t i = 0; i < ainode->mNumMeshes; i++) {
             fprintf(stdout, "%i ", ainode->mMeshes[i]);
         }
         fprintf(stdout, ")\n");
@@ -193,7 +193,7 @@ void recursiveInsertNodes(ITKExtension::Model::ModelContainer *result, aiNode * 
     }
 
 
-    for (int i = 0; i < ainode->mNumChildren; i++)
+    for (uint32_t i = 0; i < ainode->mNumChildren; i++)
         recursiveInsertNodes(result, ainode->mChildren[i], output + std::string(" "), nodeIndex, leftHanded);
 }
 
@@ -236,7 +236,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
     //
     // MESH EXPORTING
     //
-    for (int i = 0; i < scene->mNumMeshes; i++) {
+    for (uint32_t i = 0; i < scene->mNumMeshes; i++) {
         fprintf(stdout, "[Mesh] %i / %i\n", i + 1, scene->mNumMeshes);
         ITKExtension::Model::Geometry geometry;
         //geometry.format = 0;
@@ -312,7 +312,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
         // Vertex attrib import
         //
         geometry.vertexCount = mesh->mNumVertices;
-        for (int i = 0; i < mesh->mNumVertices; i++) {
+        for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
             geometry.pos.push_back( MathCore::vec3f(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z) );
             if (mesh->HasNormals())
                 geometry.normals.push_back( MathCore::vec3f(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z) );
@@ -343,13 +343,13 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
         // Indices import
         //
         if (mesh->HasFaces() && geometry.indiceCountPerFace != 1) {
-            for (int i = 0; i < mesh->mNumFaces; i++) {
+            for (uint32_t i = 0; i < mesh->mNumFaces; i++) {
                 aiFace face = mesh->mFaces[i];
                 if (face.mNumIndices != geometry.indiceCountPerFace) {
                     fprintf(stderr, "[Loader] ERROR: Face indice count different from the geometry primitive type...\n");
                     exit(-1);
                 }
-                for (int i = 0; i < face.mNumIndices; i++) {
+                for (uint32_t i = 0; i < face.mNumIndices; i++) {
                     //ARIBEIRO_ABORT(face.mIndices[i] >= 65536, "Max index value error (%u).\n", face.mIndices[i]);
                     geometry.indice.push_back(face.mIndices[i]);
                 }
@@ -362,7 +362,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
         if (mesh->HasBones()) {
             fprintf(stdout, "         Contains bones\n");
             
-            for (int i = 0; i < mesh->mNumBones; i++) {
+            for (uint32_t i = 0; i < mesh->mNumBones; i++) {
                 aiBone *aibone = mesh->mBones[i];
                 
                 ITKExtension::Model::Bone bone;
@@ -393,7 +393,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
                 */
 
 
-                for (int j = 0; j < aibone->mNumWeights; j++) {
+                for (uint32_t j = 0; j < aibone->mNumWeights; j++) {
                     ITKExtension::Model::VertexWeight bw;
                     bw.vertexID = aibone->mWeights[j].mVertexId;
                     bw.weight = aibone->mWeights[j].mWeight;
@@ -416,7 +416,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
     // ANIMATION EXPORTING
     //
     
-    for (int i = 0; i < scene->mNumAnimations; i++) {
+    for (uint32_t i = 0; i < scene->mNumAnimations; i++) {
         fprintf(stdout, "[Animation] %i / %i\n", i + 1, scene->mNumAnimations);
         aiAnimation *aianimation = scene->mAnimations[i];
         ITKExtension::Model::Animation animation;
@@ -436,7 +436,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
         // export channels
         //
         
-        for(int j=0;j<aianimation->mNumChannels;j++) {
+        for(uint32_t j=0;j<aianimation->mNumChannels;j++) {
             aiNodeAnim *ainodeanim =aianimation->mChannels[j];
             
             ITKExtension::Model::NodeAnimation na;
@@ -459,7 +459,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
                 case aiAnimBehaviour_REPEAT: na.postState = ITKExtension::Model::AnimBehaviour_REPEAT;break;
             }
 
-            for(int k =0; k< ainodeanim->mNumPositionKeys; k++){
+            for(uint32_t k =0; k< ainodeanim->mNumPositionKeys; k++){
                 aiVectorKey aivectorkey = ainodeanim->mPositionKeys[k];
                 
                 ITKExtension::Model::Vec3Key vec3key;
@@ -469,7 +469,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
                 na.positionKeys.push_back(vec3key);
             }
             
-            for(int k =0; k< ainodeanim->mNumScalingKeys; k++){
+            for(uint32_t k =0; k< ainodeanim->mNumScalingKeys; k++){
                 aiVectorKey aivectorkey = ainodeanim->mScalingKeys[k];
                 
                 ITKExtension::Model::Vec3Key vec3key;
@@ -480,7 +480,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
             }
             
             
-            for(int k =0; k< ainodeanim->mNumRotationKeys; k++){
+            for(uint32_t k =0; k< ainodeanim->mNumRotationKeys; k++){
                 aiQuatKey aiquatkey = ainodeanim->mRotationKeys[k];
                 
                 ITKExtension::Model::QuatKey quatkey;
@@ -513,7 +513,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
     // CAMERA EXPORTING
     //
     
-    for (int i = 0; i < scene->mNumCameras; i++) {
+    for (uint32_t i = 0; i < scene->mNumCameras; i++) {
         fprintf(stdout, "[Camera] %i / %i\n", i + 1, scene->mNumCameras);
         
         
@@ -557,7 +557,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
     // LIGHT EXPORTING
     //
     
-    for (int i = 0; i < scene->mNumLights; i++) {
+    for (uint32_t i = 0; i < scene->mNumLights; i++) {
         fprintf(stdout, "[Light] %i / %i\n", i + 1, scene->mNumLights);
         
         aiLight *ailight = scene->mLights[i];
@@ -659,7 +659,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
     // TEXTURE EXPORTING
     //
     
-    for (int i = 0; i < scene->mNumTextures; i++) {
+    for (uint32_t i = 0; i < scene->mNumTextures; i++) {
         fprintf(stdout, "[Texture] %i / %i\n", i + 1, scene->mNumTextures);
         fprintf(stderr, "[Texture] not implemented...\n");
     }
@@ -668,13 +668,13 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
     // MATERIAL EXPORTING
     //
     
-    for (int i = 0; i < scene->mNumMaterials; i++) {
+    for (uint32_t i = 0; i < scene->mNumMaterials; i++) {
         fprintf(stdout, "[Material] %i / %i\n", i + 1, scene->mNumMaterials);
         aiMaterial* aimaterial = scene->mMaterials[i];
         
         ITKExtension::Model::Material material;
         
-        for (int j = 0; j < aimaterial->mNumProperties; j++) {
+        for (uint32_t j = 0; j < aimaterial->mNumProperties; j++) {
             aiMaterialProperty *materialProperty = aimaterial->mProperties[j];
             
             if (starts_with(materialProperty->mKey.data, "$tex.")) {
