@@ -60,7 +60,7 @@ __HTTPS__
 
 ```bash
 git clone https://github.com/A-Ribeiro/assimp2bams.git
-cd OpenGLStarter
+cd assimp2bams
 git submodule init
 git submodule update
 ```
@@ -69,22 +69,16 @@ __SSH__
 
 ```bash
 git clone git@github.com:A-Ribeiro/assimp2bams.git
-cd OpenGLStarter
+cd assimp2bams
 git submodule init
 git submodule update
 ```
 
 ## Related Links
 
-https://github.com/A-Ribeiro/aRibeiroCore
+https://github.com/A-Ribeiro/InteractiveToolkit
 
-https://github.com/A-Ribeiro/aRibeiroPlatform
-
-https://github.com/A-Ribeiro/aRibeiroData
-
-https://github.com/A-Ribeiro/aRibeiroWrappers
-
-https://github.com/A-Ribeiro/aRibeiroTests
+https://github.com/A-Ribeiro/InteractiveToolkit-Extension
 
 ## Tools
 
