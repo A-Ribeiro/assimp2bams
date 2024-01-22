@@ -212,7 +212,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char* filename, bool
     //aiSetImportPropertyInteger(store, AI_SLM_DEFAULT_MAX_VERTICES, AI_SLM_DEFAULT_MAX_TRIANGLES);
     
     //assimp unit is cm... convert it to meters
-    aiSetImportPropertyFloat(store, AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 0.01f);
+    // aiSetImportPropertyFloat(store, AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 0.01f);
     
 
     unsigned int flags = aiProcessPreset_TargetRealtime_MaxQuality |

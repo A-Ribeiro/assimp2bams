@@ -16,7 +16,7 @@ void printUsage() {
 }
 
 int main(int argc, char* argv[]){
-    ITKCommon::Path::setWorkingPath(ITKCommon::Path::getExecutablePath(argv[0]));
+    // ITKCommon::Path::setWorkingPath(ITKCommon::Path::getExecutablePath(argv[0]));
     printf("assimp2bams - http://alessandroribeiro.thegeneralsolution.com/ - \"make things easy\"\n");
 
 #if DEBUG == 0
