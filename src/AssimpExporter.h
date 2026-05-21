@@ -41,10 +41,10 @@ void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aim
         unsigned int uvIndex;
         float blend;
         aiTextureOp texOP = (aiTextureOp)aiTextureOp_Multiply; // TextureOp_Default;
-        aiTextureMapMode mapMode = aiTextureMapMode_Wrap;
+        aiTextureMapMode mapMode[3] = {aiTextureMapMode_Wrap, aiTextureMapMode_Wrap, aiTextureMapMode_Wrap};
 
         fprintf(stdout, "         tex(%i) => \n", j);
-        if (aimaterial->GetTexture(textureType, j, &path, &mapping, &uvIndex, &blend, &texOP, &mapMode) == aiReturn_SUCCESS)
+        if (aimaterial->GetTexture(textureType, j, &path, &mapping, &uvIndex, &blend, &texOP, mapMode) == aiReturn_SUCCESS)
         {
             std::string folder, filename, file_wo_ext, ext;
             ITKCommon::Path::splitPathString(path.data, &folder, &filename, &file_wo_ext, &ext);
@@ -73,7 +73,7 @@ void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aim
             }
 
             ITKExtension::Model::TextureMapMode mMapMode = ITKExtension::Model::TextureMapMode_Wrap;
-            switch (mapMode)
+            switch (mapMode[0])
             {
             case aiTextureMapMode_Wrap:
                 mMapMode = ITKExtension::Model::TextureMapMode_Wrap;
