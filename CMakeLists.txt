@@ -22,6 +22,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 unset (CMAKE_MODULE_PATH CACHE)
 unset (CMAKE_PREFIX_PATH CACHE)
 
+
+set(ITKEXT_BCRYPT OFF CACHE BOOL "Set this if you want building bcrypt support" )
+set(ITKEXT_FONT OFF CACHE BOOL "Set this if you want building font+atlas support" )
+set(ITKEXT_IMAGE OFF CACHE BOOL "Set this if you want building image(JPEG+PNG) support" )
+set(ITKEXT_IMAGE_ATLAS OFF CACHE BOOL "Set this if you want building image/texture atlas support" )
+set(ITKEXT_MODEL ON CACHE BOOL "Set this if you want building model(BASOF) support" )
+set(ITKEXT_NETWORK OFF CACHE BOOL "Set this if you want building network support" )
+set(ITKEXT_NETWORK_TLS OFF CACHE BOOL "Set this if you want building network/tls (mbedtls) support" )
+
+
 add_subdirectory(libs/InteractiveToolkit "${CMAKE_BINARY_DIR}/lib/InteractiveToolkit")
 add_subdirectory(libs/InteractiveToolkit-Extension "${CMAKE_BINARY_DIR}/lib/InteractiveToolkit-Extension")
 
@@ -38,8 +48,8 @@ add_executable(${PROJECT_NAME}
     ${SRC}
 )
 
-# assimp uses c++11, so the child projects needs to use it too
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
+# assimp uses c++17, so the child projects needs to use it too
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 # set the target's folder (for IDEs that support it, e.g. Visual Studio)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "TOOLS")
