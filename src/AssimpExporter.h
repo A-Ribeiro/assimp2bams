@@ -72,21 +72,24 @@ void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aim
                 break;
             }
 
-            ITKExtension::Model::TextureMapMode mMapMode = ITKExtension::Model::TextureMapMode_Wrap;
-            switch (mapMode[0])
+            ITKExtension::Model::TextureMapMode mMapMode[3] = {ITKExtension::Model::TextureMapMode_Wrap, ITKExtension::Model::TextureMapMode_Wrap, ITKExtension::Model::TextureMapMode_Wrap};
+            for(int i = 0; i < 3; i++)
             {
-            case aiTextureMapMode_Wrap:
-                mMapMode = ITKExtension::Model::TextureMapMode_Wrap;
+                switch (mapMode[i])
+                {
+                case aiTextureMapMode_Wrap:
+                    mMapMode[i] = ITKExtension::Model::TextureMapMode_Wrap;
+                    break;
+                case aiTextureMapMode_Clamp:
+                    mMapMode[i] = ITKExtension::Model::TextureMapMode_Clamp;
+                    break;
+                case aiTextureMapMode_Decal:
+                    mMapMode[i] = ITKExtension::Model::TextureMapMode_Decal;
                 break;
-            case aiTextureMapMode_Clamp:
-                mMapMode = ITKExtension::Model::TextureMapMode_Clamp;
-                break;
-            case aiTextureMapMode_Decal:
-                mMapMode = ITKExtension::Model::TextureMapMode_Decal;
-                break;
-            case aiTextureMapMode_Mirror:
-                mMapMode = ITKExtension::Model::TextureMapMode_Mirror;
-                break;
+                case aiTextureMapMode_Mirror:
+                    mMapMode[i] = ITKExtension::Model::TextureMapMode_Mirror;
+                    break;
+                }
             }
 
             if (mapping == aiTextureMapping_UV)
@@ -96,7 +99,7 @@ void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aim
                 fprintf(stdout, "                    ext: %s\n", ext.c_str());
                 fprintf(stdout, "                    type: %s\n", ITKExtension::Model::TextureTypeToStr(ourTextureType));
                 fprintf(stdout, "                    op: %s\n", ITKExtension::Model::TextureOpToStr(mTexOP));
-                fprintf(stdout, "                    mapMode: %s\n", ITKExtension::Model::TextureMapModeToStr(mMapMode));
+                fprintf(stdout, "                    mapMode: %s, %s, %s\n", ITKExtension::Model::TextureMapModeToStr(mMapMode[0]), ITKExtension::Model::TextureMapModeToStr(mMapMode[1]), ITKExtension::Model::TextureMapModeToStr(mMapMode[2]));
                 fprintf(stdout, "                    uvIndex: %i\n", uvIndex);
 
                 ITKExtension::Model::Texture texture;
@@ -105,7 +108,9 @@ void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aim
                 texture.type = ourTextureType; // TextureType_DIFFUSE;
                 texture.op = mTexOP;
                 texture.uvIndex = uvIndex;
-                texture.mapMode = mMapMode;
+                texture.mapMode_s = mMapMode[0];
+                texture.mapMode_t = mMapMode[1];
+                texture.mapMode_r = mMapMode[2];
 
                 material.textures.push_back(texture);
             }
