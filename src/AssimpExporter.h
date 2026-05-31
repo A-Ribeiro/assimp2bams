@@ -18,6 +18,7 @@ bool starts_with(std::string const &value, std::string const &starting)
 #include <assimp/cimport.h>     // Plain-C interface
 #include <assimp/scene.h>       // Output data structure
 #include <assimp/postprocess.h> // Post processing flags
+#include <assimp/GltfMaterial.h>
 
 unsigned int floatToColor(float c)
 {
@@ -73,7 +74,7 @@ void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aim
             }
 
             ITKExtension::Model::TextureMapMode mMapMode[3] = {ITKExtension::Model::TextureMapMode_Wrap, ITKExtension::Model::TextureMapMode_Wrap, ITKExtension::Model::TextureMapMode_Wrap};
-            for(int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++)
             {
                 switch (mapMode[i])
                 {
@@ -85,7 +86,7 @@ void processTextureType(ITKExtension::Model::Material &material, aiMaterial *aim
                     break;
                 case aiTextureMapMode_Decal:
                     mMapMode[i] = ITKExtension::Model::TextureMapMode_Decal;
-                break;
+                    break;
                 case aiTextureMapMode_Mirror:
                     mMapMode[i] = ITKExtension::Model::TextureMapMode_Mirror;
                     break;
@@ -404,11 +405,11 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char *filename, bool
                     geometry.indice.push_back(face.mIndices[1]);
                 }
                 else
-                for (uint32_t i = 0; i < face.mNumIndices; i++)
-                {
-                    // ARIBEIRO_ABORT(face.mIndices[i] >= 65536, "Max index value error (%u).\n", face.mIndices[i]);
-                    geometry.indice.push_back(face.mIndices[i]);
-                }
+                    for (uint32_t i = 0; i < face.mNumIndices; i++)
+                    {
+                        // ARIBEIRO_ABORT(face.mIndices[i] >= 65536, "Max index value error (%u).\n", face.mIndices[i]);
+                        geometry.indice.push_back(face.mIndices[i]);
+                    }
             }
         }
 
@@ -773,6 +774,16 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char *filename, bool
         for (uint32_t j = 0; j < aimaterial->mNumProperties; j++)
         {
             aiMaterialProperty *materialProperty = aimaterial->mProperties[j];
+            std::string key_name;
+
+            if (starts_with(materialProperty->mKey.data, "$"))
+            {
+                const char *dot = strchr(materialProperty->mKey.data, '.');
+                const char *propName = dot ? dot + 1 : materialProperty->mKey.data;
+                key_name = propName;
+            }
+            else
+                key_name = materialProperty->mKey.data;
 
             if (starts_with(materialProperty->mKey.data, "$tex."))
             {
@@ -797,7 +808,8 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char *filename, bool
                     }
                     else
                     {
-                        fprintf(stdout, "               not stored\n");
+                        material.stringValue[key_name] = str.data;
+                        fprintf(stdout, "               storing string: %s\n", key_name.c_str());
                     }
                 }
                 else
@@ -825,54 +837,25 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char *filename, bool
                     {
                         float v = floats[0];
                         fprintf(stdout, "         %s => float (%f)\n", materialProperty->mKey.data, v);
-                        if (starts_with(materialProperty->mKey.data, "$mat."))
-                        {
-                            fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$mat.")]);
-                            material.floatValue[&materialProperty->mKey.data[strlen("$mat.")]] = v;
-                        }
-                        else
-                            material.floatValue[materialProperty->mKey.data] = v;
+                        material.floatValue[key_name] = v;
                     }
                     else if (iMax == 2)
                     {
                         MathCore::vec2f v(floats[0], floats[1]);
                         fprintf(stdout, "         %s => vec2 (%f, %f)\n", materialProperty->mKey.data, v.x, v.y);
-                        if (starts_with(materialProperty->mKey.data, "$mat."))
-                        {
-                            fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$mat.")]);
-                            material.vec2Value[&materialProperty->mKey.data[strlen("$mat.")]] = v;
-                        }
-                        else
-                            material.vec2Value[materialProperty->mKey.data] = v;
+                        material.vec2Value[key_name] = v;
                     }
                     else if (iMax == 3)
                     {
                         MathCore::vec3f v(floats[0], floats[1], floats[2]);
                         fprintf(stdout, "         %s => vec3 (%f, %f, %f)\n", materialProperty->mKey.data, v.x, v.y, v.z);
-                        if (starts_with(materialProperty->mKey.data, "$mat."))
-                        {
-                            fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$mat.")]);
-                            material.vec3Value[&materialProperty->mKey.data[strlen("$mat.")]] = v;
-                        }
-                        else
-                            material.vec3Value[materialProperty->mKey.data] = v;
+                        material.vec3Value[key_name] = v;
                     }
                     else if (iMax == 4)
                     {
                         MathCore::vec4f v(floats[0], floats[1], floats[2], floats[3]);
                         fprintf(stdout, "         %s => vec4 (%f, %f, %f, %f)\n", materialProperty->mKey.data, v.x, v.y, v.z, v.w);
-                        if (starts_with(materialProperty->mKey.data, "$mat."))
-                        {
-                            fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$mat.")]);
-                            material.vec4Value[&materialProperty->mKey.data[strlen("$mat.")]] = v;
-                        }
-                        else if (starts_with(materialProperty->mKey.data, "$clr."))
-                        {
-                            fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$clr.")]);
-                            material.vec4Value[&materialProperty->mKey.data[strlen("$clr.")]] = v;
-                        }
-                        else
-                            material.vec4Value[materialProperty->mKey.data] = v;
+                        material.vec4Value[key_name] = v;
                     }
                     else if (iMax == 16)
                     {
@@ -908,14 +891,7 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char *filename, bool
                     {
                         int v = integers[0];
                         fprintf(stdout, "         %s => int (%i) \n", materialProperty->mKey.data, v);
-
-                        if (starts_with(materialProperty->mKey.data, "$mat."))
-                        {
-                            fprintf(stdout, "               storing name: %s\n", &materialProperty->mKey.data[strlen("$mat.")]);
-                            material.intValue[&materialProperty->mKey.data[strlen("$mat.")]] = v;
-                        }
-                        else
-                            material.intValue[materialProperty->mKey.data] = v;
+                        material.intValue[key_name] = v;
                     }
                     else
                     {
@@ -927,12 +903,88 @@ ITKExtension::Model::ModelContainer *ImportFromAssimp(const char *filename, bool
                     fprintf(stdout, "         %s => ERROR TO READ VALUE...\n", materialProperty->mKey.data);
                 }
             }
+            else if (materialProperty->mType == aiPTI_Buffer)
+            {
+                const char *data = materialProperty->mData;          // raw bytes
+                uint32_t dataLength = materialProperty->mDataLength; // size in bytes
 
+                fprintf(stdout, "         %s (type: Buffer, size: %u bytes) => ...\n",
+                        materialProperty->mKey.data, dataLength);
+
+                if (dataLength == 1)
+                {
+                    uint8_t v = *(uint8_t *)data;
+                    fprintf(stdout, "               value: %u\n", v);
+                    material.intValue[key_name] = v;
+                }
+                else if (dataLength == 4)
+                {
+                    uint32_t v = *(uint32_t *)data;
+                    fprintf(stdout, "               value: %u\n", v);
+                    // AI_MATKEY_SHADING_MODEL
+                    if (strcmp(materialProperty->mKey.data, "$mat.shadingm") == 0)
+                    {
+                        switch (v)
+                        {
+                        case aiShadingMode_Flat:
+                            material.stringValue[key_name] = "FLAT";
+                            break;
+                        case aiShadingMode_Gouraud:
+                            material.stringValue[key_name] = "GOURAUD";
+                            break;
+                        case aiShadingMode_Phong:
+                            material.stringValue[key_name] = "PHONG";
+                            break;
+                        case aiShadingMode_Blinn:
+                            material.stringValue[key_name] = "BLINN";
+                            break;
+                        case aiShadingMode_Toon:
+                            material.stringValue[key_name] = "TOON";
+                            break;
+                        case aiShadingMode_OrenNayar:
+                            material.stringValue[key_name] = "OREN_NAYAR";
+                            break;
+                        case aiShadingMode_Minnaert:
+                            material.stringValue[key_name] = "MINNAERT";
+                            break;
+                        case aiShadingMode_CookTorrance:
+                            material.stringValue[key_name] = "COOK_TORRANCE";
+                            break;
+                        case aiShadingMode_NoShading:
+                            material.stringValue[key_name] = "NO_SHADING";
+                            break;
+                        default:
+                            material.stringValue[key_name] = "NO_SHADING";
+                            fprintf(stdout, "               unknown shading model: %u\n", v);
+                        }
+                    }
+                    else
+                        material.intValue[key_name] = v;
+                }
+                else
+                    fprintf(stdout, "         %s (type: Buffer) => not processed...\n", materialProperty->mKey.data);
+            }
             else
             {
-                fprintf(stdout, "         %s => not processed...\n", materialProperty->mKey.data);
+                fprintf(stdout, "         %s (type: %i) => not processed...\n", materialProperty->mKey.data, materialProperty->mType);
             }
         }
+
+        // aiString alphaMode;
+        // if (aimaterial->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode) == aiReturn_SUCCESS) {
+        //     // "OPAQUE", "MASK", or "BLEND"
+        //     if (std::string(alphaMode.C_Str()) == "OPAQUE") {
+        //         material.intValue["OPAQUE"] = 1;
+        //     } else if (std::string(alphaMode.C_Str()) == "MASK") {
+        //         material.intValue["MASK"] = 1;
+        //     } else if (std::string(alphaMode.C_Str()) == "BLEND") {
+        //         material.intValue["BLEND"] = 1;
+        //     }
+        // }
+
+        // for(const auto &kv : material.stringValue) {
+        //     fprintf(stdout, "         stringValue (Exported): %s => %s\n", kv.first.c_str(), kv.second.c_str());
+        // }
 
         processTextureType(material, aimaterial, aiTextureType_DIFFUSE, ITKExtension::Model::TextureType_DIFFUSE);
         processTextureType(material, aimaterial, aiTextureType_SPECULAR, ITKExtension::Model::TextureType_SPECULAR);
